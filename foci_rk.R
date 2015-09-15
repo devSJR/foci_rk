@@ -15,7 +15,7 @@ local({
              role = c("aut"))),
     about = list(desc = "GUI interface to generate reports from gH2AX experiments.",
                  version = "0.0.1", 
-                 url = "")
+                 url = "https://github.com/devSJR/foci_rk/blob/master/foci_rk.R")
   )
   
   ## Help page
@@ -37,24 +37,34 @@ local({
 					   )
   
   ## General settings
+  # File browser for XLS data.
+  XLS_file <- rk.XML.browser("Browse here:", url = TRUE, filter = ".xls")
   
-  XLS_file <- rk.XML.browser("Browse here:")
+  # Definitions of processing in R
+  # Error message handling
+  suppress.warnings.chk <- rk.XML.cbox(label = "Show warnings", value = "0", un.value = "-1")
   
-  var.select <- rk.XML.varselector(label = "Select data")
-  var.data.x <- rk.XML.varslot(label = "Var X", source = var.select, multi = FALSE, classes = "numeric", types = "number", required = FALSE)
+  # Definition of plot labels and appearance
+  generic.plot.options <- rk.plotOptions()
+  plot.main <- rk.XML.input(label = "Main", initial = "Zell position")
+  plot.xlab <- rk.XML.input(label = "Abscissa", initial = "X")
+  plot.ylab <- rk.XML.input(label = "Ordinate", initial = "Y")
   
   # Plot preview
   preview.chk <- rk.XML.preview(label = "Preview")
   generic.plot.options <- rk.plotOptions()
   
-  run.DSBreport.chk <- rk.XML.cbox(label = "Start DSB report generation", value = "1", un.value = "0", chk = TRUE)
-  
   basic.settings <- rk.XML.row(
-    XLS_file,
-    run.DSBreport.chk,
-    var.select,
-    preview.chk,
-    var.data.x
+    rk.XML.col(
+		XLS_file,
+		preview.chk,
+		suppress.warnings.chk
+	),
+    rk.XML.col(
+      plot.main,
+      plot.xlab,
+      plot.ylab
+      )
   )
   
   full.dialog <- rk.XML.dialog(
@@ -62,13 +72,14 @@ local({
   )
   
   JS.calc <- rk.paste.JS(
+	echo("options( warn = ", suppress.warnings.chk," )\n"),
 	echo("raw_data <- read_aklides(\"", XLS_file,"\")\n")
     )
 
 
   JS.print <- rk.paste.JS(
     rk.paste.JS.graph(
-      	  echo("plot(hexbin(raw_data[, 2], raw_data[, 3], xbins = 16))\n")
+      echo("plot(hexbin(raw_data[, 2], raw_data[, 3], xbins = 16), main = \"", plot.main,"\", xlab = \"", plot.xlab,"\", ylab = \"", plot.ylab,"\")\n")
       ),
       ite("full", rk.paste.JS(
 	echo("\nsummary(raw_data[, 2])\n"), level = 3
