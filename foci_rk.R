@@ -30,7 +30,6 @@ local({
   ## Dependencies
   dependencies.info <- rk.XML.dependencies(dependencies = list(rkward.min = "0.6.3"), 
 					   package = list(
-							  c(name = "hexbin", min = "1.27.1"),
 							  c(name = "mdcr", min = "0.0.1"),
 							  c(name = "readxl", min = "0.1.0")
 							  )
@@ -50,6 +49,12 @@ local({
   plot.xlab <- rk.XML.input(label = "Abscissa", initial = "X")
   plot.ylab <- rk.XML.input(label = "Ordinate", initial = "Y")
   
+  biomarker <- rk.XML.dropdown(label = "Biomarker", 
+			       options = list(
+					      "FITC" = c(val = "FITC", chk = TRUE, i18n = NULL),
+					      "APC" = c(val = "APC", chk = FALSE, i18n = NULL)
+					      )) 
+  
   # Plot preview
   preview.chk <- rk.XML.preview(label = "Preview")
   generic.plot.options <- rk.plotOptions()
@@ -63,7 +68,8 @@ local({
     rk.XML.col(
       plot.main,
       plot.xlab,
-      plot.ylab
+      plot.ylab,
+      biomarker
       )
   )
   
@@ -79,7 +85,9 @@ local({
 
   JS.print <- rk.paste.JS(
     rk.paste.JS.graph(
-      echo("plot(hexbin(raw_data[, 2], raw_data[, 3], xbins = 16), main = \"", plot.main,"\", xlab = \"", plot.xlab,"\", ylab = \"", plot.ylab,"\")\n")
+#       echo("plot(hexbin(raw_data[, 2], raw_data[, 3], xbins = 16), main = \"", plot.main,"\", xlab = \"", plot.xlab,"\", ylab = \"", plot.ylab,"\")\n")
+	echo("plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., subset = dye == \"", biomarker,"\", pch = 15, cex = 2)\n"),
+	echo("points(Y.coord. ~ X.coord., data = raw_data, col = FociOK.n., subset = dye == \"", biomarker,"\", pch = 19)\n")
       ),
       ite("full", rk.paste.JS(
 	echo("\nsummary(raw_data[, 2])\n"), level = 3
@@ -93,7 +101,7 @@ local({
     about = about.info,
     dependencies = dependencies.info,
     xml = list(dialog = full.dialog),
-    js = list(require = c("hexbin", "mdcr", "readxl"),
+    js = list(require = c("mdcr", "readxl"),
               calculate = JS.calc,
               doPrintout = JS.print,
               results.header = FALSE),
