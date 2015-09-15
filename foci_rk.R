@@ -45,9 +45,9 @@ local({
   
   # Definition of plot labels and appearance
   generic.plot.options <- rk.plotOptions()
-  plot.main <- rk.XML.input(label = "Main", initial = "Zell position")
-  plot.xlab <- rk.XML.input(label = "Abscissa", initial = "X")
-  plot.ylab <- rk.XML.input(label = "Ordinate", initial = "Y")
+  in.main <- rk.XML.input(label = "Main", initial = "Zell position")
+  in.xlab <- rk.XML.input(label = "Abscissa", initial = "X")
+  in.ylab <- rk.XML.input(label = "Ordinate", initial = "Y")
   
   biomarker <- rk.XML.dropdown(label = "Biomarker", 
 			       options = list(
@@ -66,9 +66,9 @@ local({
 		suppress.warnings.chk
 	),
     rk.XML.col(
-      plot.main,
-      plot.xlab,
-      plot.ylab,
+      in.main,
+      in.xlab,
+      in.ylab,
       biomarker
       )
   )
@@ -85,8 +85,10 @@ local({
 
   JS.print <- rk.paste.JS(
     rk.paste.JS.graph(
-#       echo("plot(hexbin(raw_data[, 2], raw_data[, 3], xbins = 16), main = \"", plot.main,"\", xlab = \"", plot.xlab,"\", ylab = \"", plot.ylab,"\")\n")
-	echo("plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., subset = dye == \"", biomarker,"\", pch = 15, cex = 2)\n"),
+#       echo("plot(hexbin(raw_data[, 2], raw_data[, 3], xbins = 16), main = \"", in.main,"\", xlab = \"", in.xlab,"\", ylab = \"", in.ylab,"\")\n")
+	echo("plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., \n"),
+	echo("\tsubset = dye == \"", biomarker,"\", pch = 15, cex = 2, \n"),
+	echo("\txlab = \"", in.xlab,"\", ylab = \"", in.ylab,"\", main = paste(\"", in.main,"\", \"", biomarker,"\"))\n"),
 	echo("points(Y.coord. ~ X.coord., data = raw_data, col = FociOK.n., subset = dye == \"", biomarker,"\", pch = 19)\n")
       ),
       ite("full", rk.paste.JS(
