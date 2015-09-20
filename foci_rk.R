@@ -107,7 +107,7 @@ local({
     echo("all_spots_purged <- reshape2::melt(list(\n"),
     echo("\t\tSpots.n. = subset(raw_data_purged, dye == \"", biomarker,"\", Spots.n.)[, 1],\n"),
     echo("\t\tFociOK.n. = subset(raw_data_purged, dye == \"", biomarker,"\", FociOK.n.)[, 1]))\n"),
-    echo("res <- data.frame(DSB = raw_data[[\"Spots.n.\"]], area = raw_data[[\"Area.um..\"]], dye = raw_data[[\"dye\"]])\n"),
+    echo("res <- data.frame(DSB = raw_data_purged[[\"Spots.n.\"]], area = raw_data_purged[[\"Area.um..\"]], dye = raw_data_purged[[\"dye\"]])\n"),
     echo("res <- res[res$dye == \"", biomarker,"\", ]\n"),
     echo("res <- res[order (res[[\"", order_parameter,"\"]]), ]\n"),
     echo("res_density <- density(subset(raw_data, dye == \"", biomarker,"\", Area.um..)[, 1])\n")
@@ -117,23 +117,25 @@ local({
   JS.print <- rk.paste.JS(
     rk.paste.JS.graph(
       echo("par(mfrow = c(2,3))\n"),
-      echo("plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., \n"),
-      echo("\tsubset = dye == \"", biomarker,"\", pch = 15, cex = 2, \n"),
-      echo("\txlab = \"", in.xlab,"\", ylab = \"", in.ylab,"\", main = paste(\"", in.main,"\", \"", biomarker,"\"))\n"),
-      echo("points(Y.coord. ~ X.coord., data = raw_data, col = FociOK.n., subset = dye == \"", biomarker,"\", pch = 19)\n\n"),
       echo("plot(table(subset(raw_data, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],\n"),
       echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
       echo("points(table(subset(raw_data, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)\n"),
       echo("\tlegend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))\n"),
       echo("plot(res_density, main = \"Cell diameter density\", lwd = 2)\n"),
+      echo("lines(density(rnorm(100000, median(res[[\"area\"]]), mad(res[[\"area\"]]))), col = \"red2\")\n"),
       echo("\t\tabline(v = c(", lower.limit,", ", upper.limit,"), col = \"grey\")\n"),
+      echo("plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., \n"),
+      echo("\tsubset = dye == \"", biomarker,"\", pch = 15, cex = 2, \n"),
+      echo("\txlab = \"", in.xlab,"\", ylab = \"", in.ylab,"\", main = paste(\"", in.main,"\", \"", biomarker,"\"))\n"),
+      echo("points(Y.coord. ~ X.coord., data = raw_data, col = FociOK.n., subset = dye == \"", biomarker,"\", pch = 19)\n\n"),
       
-      echo("pyramid.plot(res$DSB, res$area, labels=NA,top.labels=c(\"DSB\",\"\",\"Cell area\"), gap = 4, unit = c(\"Foci per cell\", \"cm²\"), xlim = c(max(res$DSB), max(res$area)))\n"),
       echo("plot(table(subset(raw_data_purged, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],\n"),
       echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
       echo("points(table(subset(raw_data_purged, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)\n"),
       echo("\tlegend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))\n"),
-      echo("plot(density(subset(raw_data_purged, dye == \"", biomarker,"\", Area.um..)[, 1]), xlim = range(res_density$x), main = \"Cell diameter density\", lwd = 2)\n")
+      echo("plot(density(subset(raw_data_purged, dye == \"", biomarker,"\", Area.um..)[, 1]), xlim = range(res_density$x), ylab = \"Density\", main = \"Cell diameter density\", lwd = 2)\n"),
+      echo("pyramid.plot(res$DSB, res$area, labels = rep(\"\", nrow(res)), top.labels=c(\"DSB\",\"\",\"Cell area\"), gap = 1, unit = c(\"Foci\", \"cm²\"), xlim = c(max(res$DSB), max(res$area)))\n"),
+      echo("abline(v = c(-median(res[[\"DSB\"]]), median(res[[\"area\"]])), col = c(\"grey\", \"grey\"), lwd = 2)\n")
     ),
     ite("full", rk.paste.JS(
       echo("\nsummary(raw_data[, 2])\n"), level = 3
