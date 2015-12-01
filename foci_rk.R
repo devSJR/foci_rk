@@ -1,6 +1,7 @@
 # RKWard plugin visualization of spots
 
 require(rkwarddev)
+rkwarddev.required("0.06-5")
 
 local({
   ## Author names and contact information
@@ -15,7 +16,7 @@ local({
              role = c("aut"))),
     about = list(desc = "GUI interface to generate reports from gH2AX experiments.",
                  version = "0.0.1-1", 
-                 url = "https://github.com/devSJR/foci_rk/blob/master/foci_rk.R")
+                 url = "https://github.com/devSJR/foci_rk")
   )
   
   ## Help page
@@ -47,23 +48,23 @@ local({
   
   # Definition of plot labels and appearance
   generic.plot.options <- rk.plotOptions()
-  in.main <- rk.XML.input(label = "Main", initial = "Zell position")
-  in.xlab <- rk.XML.input(label = "Abscissa", initial = "X")
-  in.ylab <- rk.XML.input(label = "Ordinate", initial = "Y")
+  in.main <- rk.XML.input(label = "Main", initial = "Cell position")
+  in.xlab <- rk.XML.input(label = "Abscissa", initial = "X position")
+  in.ylab <- rk.XML.input(label = "Ordinate", initial = "Y position")
   
-  lower.limit <- rk.XML.spinbox(label = "Lower limit", min = 0, max = 99, initial = 15, precision = 2)
-  upper.limit <- rk.XML.spinbox(label = "Upper limit", min = 1, max = 100, initial = 70, precision = 2)
+  lower.limit <- rk.XML.spinbox(label = "Lower limit", min = 0, max = 99, initial = 25, precision = 2)
+  upper.limit <- rk.XML.spinbox(label = "Upper limit", min = 1, max = 100, initial = 55, precision = 2)
   
   biomarker <- rk.XML.dropdown(label = "Biomarker", 
                                options = list(
-                                 "FITC" = c(val = "FITC", chk = TRUE, i18n = NULL),
-                                 "APC" = c(val = "APC", chk = FALSE, i18n = NULL)
+				 "DSB (γH2AX)" = c(val = "FITC", chk = TRUE, i18n = NULL),
+                                 "53BP1" = c(val = "APC", chk = FALSE, i18n = NULL)
                                ))
 			       
   order_parameter <- rk.XML.dropdown(label = "Order parameter", 
 		options = list(
 				"DSB" = c(val = "DSB", chk = TRUE, i18n = NULL),
-				"Cell area" = c(val = "area", chk = FALSE, i18n = NULL)
+				"Nucleus area" = c(val = "area", chk = FALSE, i18n = NULL)
 			      ))
   
   # Plot preview
@@ -118,10 +119,10 @@ local({
     rk.paste.JS.graph(
       echo("par(mfrow = c(2,3))\n"),
       echo("plot(table(subset(raw_data, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],\n"),
-      echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
+      echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", main = paste(\"Foci per cell\", \"\nRaw data\"), col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
       echo("points(table(subset(raw_data, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)\n"),
       echo("\tlegend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))\n"),
-      echo("plot(res_density, main = \"Cell diameter density\", lwd = 2)\n"),
+      echo("plot(res_density, main = \"Nucleus diameter density\nRaw data\", lwd = 2)\n"),
       echo("lines(density(rnorm(100000, median(res[[\"area\"]]), mad(res[[\"area\"]]))), col = \"red2\")\n"),
       echo("\t\tabline(v = c(", lower.limit,", ", upper.limit,"), col = \"grey\")\n"),
       echo("plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., \n"),
@@ -130,11 +131,11 @@ local({
       echo("points(Y.coord. ~ X.coord., data = raw_data, col = FociOK.n., subset = dye == \"", biomarker,"\", pch = 19)\n\n"),
       
       echo("plot(table(subset(raw_data_purged, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],\n"),
-      echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
+      echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", main = paste(\"Foci per cell\", \"\nSize corrected\"), col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
       echo("points(table(subset(raw_data_purged, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)\n"),
       echo("\tlegend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))\n"),
-      echo("plot(density(subset(raw_data_purged, dye == \"", biomarker,"\", Area.um..)[, 1]), xlim = range(res_density$x), ylab = \"Density\", main = \"Cell diameter density\", lwd = 2)\n"),
-      echo("pyramid.plot(res$DSB, res$area, labels = rep(\"\", nrow(res)), top.labels=c(\"DSB\",\"\",\"Cell area\"), gap = 1, unit = c(\"Foci\", \"cm²\"), xlim = c(max(res$DSB), max(res$area)))\n"),
+      echo("plot(density(subset(raw_data_purged, dye == \"", biomarker,"\", Area.um..)[, 1]), xlim = range(res_density$x), ylab = \"Density\", main = \"Nucleus diameter density\nSize corrected\", lwd = 2)\n"),
+      echo("pyramid.plot(res$DSB, res$area, labels = rep(\"\", nrow(res)), top.labels=c(\"DSB\",\"\",\"Nucleus area\"), gap = 1, unit = c(\"Foci\", \"cm²\"), xlim = c(max(res$DSB), max(res$area)))\n"),
       echo("abline(v = c(-median(res[[\"DSB\"]]), median(res[[\"area\"]])), col = c(\"grey\", \"grey\"), lwd = 2)\n")
     ),
     ite("full", rk.paste.JS(
