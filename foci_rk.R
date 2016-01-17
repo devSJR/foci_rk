@@ -1,7 +1,7 @@
 # RKWard plugin visualization of spots
 
 require(rkwarddev)
-rkwarddev.required("0.06-5")
+rkwarddev.required("0.8.1")
 
 local({
   ## Author names and contact information
@@ -29,11 +29,11 @@ local({
   )
   
   ## Dependencies
-  dependencies.info <- rk.XML.dependencies(dependencies = list(rkward.min = "0.6.3"), 
+  dependencies.info <- rk.XML.dependencies(dependencies = list(rkward.min = "0.6.3", R.min = "3.2"), 
                                            package = list(
                                              c(name = "mdcr", min = "0.0.1"),
-                                             c(name = "readxl", min = "0.1.0"),
                                              c(name = "plotrix", min = "3.5.12"),
+                                             c(name = "readxl", min = "0.1.0"),
                                              c(name = "reshape2", min = "1.4.1")
                                            )
   )
