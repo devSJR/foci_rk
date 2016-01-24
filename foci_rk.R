@@ -14,8 +14,8 @@ local({
       person(given = "Michal", family = "Burdukiewicz",
              email = "michalburdukiewicz@gmail.com", 
              role = c("aut"))),
-    about = list(desc = "GUI interface to generate reports from gH2AX experiments.",
-                 version = "0.0.1-1", 
+    about = list(desc = "GUI interface to generate reports from gamma H2AX experiments.",
+                 version = "0.0.1-2", 
                  url = "https://github.com/devSJR/foci_rk")
   )
   
@@ -97,46 +97,64 @@ local({
   )
   
   JS.calc <- rk.paste.JS(
-    echo("options( warn = ", suppress.warnings.chk," )\n"),
-    echo("raw_data <- read_aklides(\"", XLS_file,"\")\n"),
-    echo("raw_data_purged <- raw_data[\"", lower.limit,"\" <= raw_data$Area.um.. & raw_data$Area.um.. <= \"", upper.limit,"\", ]\n"),
-    echo("all_spots <- reshape2::melt(list(\n"),
-    echo("\t\tSpots.n. = subset(raw_data, dye == \"", biomarker,"\", Spots.n.)[, 1],\n"),
-    echo("\t\tFociOK.n. = subset(raw_data, dye == \"", biomarker,"\", FociOK.n.)[, 1]))\n"),
-    echo("res_all_spots <- table(all_spots)\n"),
-    echo("all_spots_coordinates <- cbind(xlim = c(0,nrow(res_all_spots)), ylim = c(0, max(res_all_spots)))\n"),
-    echo("all_spots_purged <- reshape2::melt(list(\n"),
-    echo("\t\tSpots.n. = subset(raw_data_purged, dye == \"", biomarker,"\", Spots.n.)[, 1],\n"),
-    echo("\t\tFociOK.n. = subset(raw_data_purged, dye == \"", biomarker,"\", FociOK.n.)[, 1]))\n"),
-    echo("res <- data.frame(DSB = raw_data_purged[[\"Spots.n.\"]], area = raw_data_purged[[\"Area.um..\"]], dye = raw_data_purged[[\"dye\"]])\n"),
-    echo("res <- res[res$dye == \"", biomarker,"\", ]\n"),
-    echo("res <- res[order (res[[\"", order_parameter,"\"]]), ]\n"),
-    echo("res_density <- density(subset(raw_data, dye == \"", biomarker,"\", Area.um..)[, 1])\n")
+    echo(
+      "options(warn = ", suppress.warnings.chk,")
+      
+      raw_data <- read_aklides(\"", XLS_file,"\")
+      
+      raw_data_purged <- raw_data[\"", lower.limit,"\" <= raw_data$Area.um.. & raw_data$Area.um.. <= \"", upper.limit,"\", ]
+      
+      all_spots <- reshape2::melt(list(
+	Spots.n. = subset(raw_data, dye == \"", biomarker,"\", Spots.n.)[, 1],
+	FociOK.n. = subset(raw_data, dye == \"", biomarker,"\", FociOK.n.)[, 1])
+      )
+      
+      res_all_spots <- table(all_spots)
+      
+      all_spots_coordinates <- cbind(xlim = c(0,nrow(res_all_spots)), ylim = c(0, max(res_all_spots)))
+      
+      all_spots_purged <- reshape2::melt(list(
+	Spots.n. = subset(raw_data_purged, dye == \"", biomarker,"\", Spots.n.)[, 1],
+	FociOK.n. = subset(raw_data_purged, dye == \"", biomarker,"\", FociOK.n.)[, 1])
+      )
+      
+      res <- data.frame(DSB = raw_data_purged[[\"Spots.n.\"]], area = raw_data_purged[[\"Area.um..\"]], dye = raw_data_purged[[\"dye\"]])
+      
+      res <- res[res$dye == \"", biomarker,"\", ]
+      res <- res[order (res[[\"", order_parameter,"\"]]), ]
+      res_density <- density(subset(raw_data, dye == \"", biomarker,"\", Area.um..)[, 1])
+    \n")
   )
   
   
   JS.print <- rk.paste.JS(
     rk.paste.JS.graph(
-      echo("par(mfrow = c(2,3))\n"),
-      echo("plot(table(subset(raw_data, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],\n"),
-      echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", main = paste(\"Foci per cell\", \"\nRaw data\"), col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
-      echo("points(table(subset(raw_data, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)\n"),
-      echo("\tlegend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))\n"),
-      echo("plot(res_density, main = \"Nucleus diameter density\nRaw data\", lwd = 2)\n"),
-      echo("lines(density(rnorm(100000, median(res[[\"area\"]]), mad(res[[\"area\"]]))), col = \"red2\")\n"),
-      echo("\t\tabline(v = c(", lower.limit,", ", upper.limit,"), col = \"grey\")\n"),
-      echo("plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., \n"),
-      echo("\tsubset = dye == \"", biomarker,"\", pch = 15, cex = 2, \n"),
-      echo("\txlab = \"", in.xlab,"\", ylab = \"", in.ylab,"\", main = paste(\"", in.main,"\", \"", biomarker,"\"))\n"),
-      echo("points(Y.coord. ~ X.coord., data = raw_data, col = FociOK.n., subset = dye == \"", biomarker,"\", pch = 19)\n\n"),
+      echo("
+	    par(mfrow = c(2,3))
+	    plot(table(subset(raw_data, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],
+	      ylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", 
+	      main = paste(\"Foci per cell\n\", \"Raw data\"), col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)
+	      points(table(subset(raw_data, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)
+	      
+	    legend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))
+	    
+	    plot(res_density, main = \"Nucleus diameter density\nRaw data\", lwd = 2)
+	      lines(density(rnorm(100000, median(res[[\"area\"]]), mad(res[[\"area\"]]))), col = \"red2\")
+	      abline(v = c(", lower.limit,", ", upper.limit,"), col = \"grey\")
+	      plot(Y.coord. ~ X.coord., data = raw_data, col = Spots.n., 
+	      subset = dye == \"", biomarker,"\", pch = 15, cex = 2, 
+	      xlab = \"", in.xlab,"\", ylab = \"", in.ylab,"\", main = paste(\"", in.main,"\", \"", biomarker,"\"))
+	      points(Y.coord. ~ X.coord., data = raw_data, col = FociOK.n., subset = dye == \"", biomarker,"\", pch = 19)
+      \n"),
       
-      echo("plot(table(subset(raw_data_purged, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],\n"),
-      echo("\t\tylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", main = paste(\"Foci per cell\", \"\nSize corrected\"), col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)\n"),
-      echo("points(table(subset(raw_data_purged, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)\n"),
-      echo("\tlegend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))\n"),
-      echo("plot(density(subset(raw_data_purged, dye == \"", biomarker,"\", Area.um..)[, 1]), xlim = range(res_density$x), ylab = \"Density\", main = \"Nucleus diameter density\nSize corrected\", lwd = 2)\n"),
-      echo("pyramid.plot(res$DSB, res$area, labels = rep(\"\", nrow(res)), top.labels=c(\"DSB\",\"\",\"Nucleus area\"), gap = 1, unit = c(\"Foci\", \"cm²\"), xlim = c(max(res$DSB), max(res$area)))\n"),
-      echo("abline(v = c(-median(res[[\"DSB\"]]), median(res[[\"area\"]])), col = c(\"grey\", \"grey\"), lwd = 2)\n")
+      echo("plot(table(subset(raw_data_purged, dye == \"", biomarker,"\", Spots.n.)), xlim = all_spots_coordinates[, \"xlim\"],
+	  ylim = all_spots_coordinates[, \"ylim\"], xlab = \"Foci per cell\", ylab = \"Counts\", main = paste(\"Foci per cell\", \"\nSize corrected\"), col = rgb(0, 0, 1, alpha = 0.7), lwd = 8)
+	  points(table(subset(raw_data_purged, dye == \"", biomarker,"\", FociOK.n.)), col = rgb(0, 1, 0, alpha = 0.9), lwd = 4)
+	  legend(\"topright\", c(\"All foci\", \"DSB\"), pch = c(19,19), bty = \"n\", col = c(rgb(0, 0, 1, alpha = 0.7), rgb(0, 1, 0, alpha = 0.9)))
+	  plot(density(subset(raw_data_purged, dye == \"", biomarker,"\", Area.um..)[, 1]), xlim = range(res_density$x), ylab = \"Density\", main = \"Nucleus diameter density\nSize corrected\", lwd = 2)
+	  pyramid.plot(res$DSB, res$area, labels = rep(\"\", nrow(res)), top.labels=c(\"DSB\",\"\",\"Nucleus area\"), gap = 1, unit = c(\"Foci\", \"cm²\"), xlim = c(max(res$DSB), max(res$area)))
+	  abline(v = c(-median(res[[\"DSB\"]]), median(res[[\"area\"]])), col = c(\"grey\", \"grey\"), lwd = 2)
+      \n")
     ),
     ite("full", rk.paste.JS(
       echo("\nsummary(raw_data[, 2])\n"), level = 3
@@ -150,7 +168,7 @@ local({
     about = about.info,
     dependencies = dependencies.info,
     xml = list(dialog = full.dialog),
-    js = list(require = c("mdcr", "readxl", "plotrix", "reshape2"),
+    js = list(require = c("mdcr", "plotrix", "readxl","reshape2"),
               calculate = JS.calc,
               doPrintout = JS.print,
               results.header = FALSE),
@@ -163,8 +181,7 @@ local({
     overwrite = TRUE,
     show = FALSE
   )
-  
-  rk.build.plugin(DSBreport_menu, R.libs="~/R", check = TRUE)
-  
+
 })
 
+  rk.build.plugin(DSBreport_menu, R.libs="~/R", check = TRUE)
